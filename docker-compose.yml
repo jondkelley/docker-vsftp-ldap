@@ -1,0 +1,94 @@
+version: "3.8"
+
+services:
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: openldap
+    volumes:
+      - ./storage/ldap_db:/var/lib/ldap
+      - ./storage/ldap_config:/etc/ldap/slapd.d
+    environment:
+      - LDAP_ORGANISATION=example-org
+      - LDAP_DOMAIN=example.org
+      - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_CONFIG_PASSWORD=config
+      - LDAP_RFC2307BIS_SCHEMA=true
+      - LDAP_REMOVE_CONFIG_AFTER_SETUP=true
+      - LDAP_TLS_VERIFY_CLIENT=never
+    ports:
+      - "389:389"
+      - "636:636"
+    networks:
+      - openldap
+  openldap-ui:
+    image: wheelybird/ldap-user-manager:v1.5
+    container_name: openldap-ui
+    environment:
+      - LDAP_URI=ldap://openldap
+      - LDAP_BASE_DN=dc=example,dc=org
+      - LDAP_REQUIRE_STARTTLS=FALSE
+      - LDAP_ADMINS_GROUP=admins
+      - LDAP_ADMIN_BIND_DN=cn=admin,dc=example,dc=org
+      - LDAP_ADMIN_BIND_PWD=admin
+      - LDAP_IGNORE_CERT_ERRORS=true
+      - NO_HTTPS=TRUE
+      - PASSWORD_HASH=SSHA
+      - SERVER_HOSTNAME=localhost:18080
+      - ACCEPT_WEAK_PASSWORDS=true
+      - USERNAME_FORMAT={first_name}_{last_name}
+      - DEFAULT_USER_GROUP=everyone
+    depends_on:
+      - openldap
+    ports:
+      - 18080:80
+    networks:
+      - openldap
+  filebrowser:
+    image: hurlenko/filebrowser
+    user: "${UID}:${GID}"
+    ports:
+      - 8080:8080
+    volumes:
+      - ./data:/data
+      - ./filebrowser_config:/config
+      # admin:admin default admin
+    environment:
+      - FB_BASEURL=/filebrowser
+    restart: always
+  vsftpd:
+    image: tholu/docker-vsftp-ldap:latest
+    container_name: vsftpd
+    environment:
+      - LDAP_BASE=dc=example,dc=org
+      - LDAP_BINDDN=cn=admin,dc=example,dc=org
+      - LDAP_BINDPW=admin
+      - LDAP_FILTER=(&(objectClass=posixAccount)(memberOf=cn=access_laser_ftp,ou=groups,dc=example,dc=org))
+      - LDAP_SSL_CACERTFILE=/etc/ssl/certs/ca-certificates.crt
+      - LDAP_SSL_ENABLE=off
+      - LDAP_URI=ldap://openldap:389
+      - VSFTPD_PASV_ENABLE=YES
+      - VSFTPD_PASV_MAX_PORT=10105
+      - VSFTPD_PASV_MIN_PORT=10100
+      - VSFTPD_SSL_CIPHERS=HIGH
+      - VSFTPD_SSL_ENABLE=NO
+      - VSFTPD_SSL_PRIVATEKEY=/etc/ssl/certs/privatekey.key
+      - VSFTPD_SSL_PUBLICKEY=/etc/ssl/certs/publickey.pem
+      - VSFTPD_SSL_SSLV2=NO
+      - VSFTPD_SSL_SSLV3=NO
+      - VSFTPD_SSL_TLSV1=YES
+    volumes:
+      - ./data:/home/vsftpd
+    ports:
+      - "20:20"
+      - "21:21"
+      - "10100-10105:10100-10105"
+      - "990:990"
+    depends_on:
+      - openldap
+    networks:
+      - openldap
+
+networks:
+  openldap:
+    name: openldap
+
