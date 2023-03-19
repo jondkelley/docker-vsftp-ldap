@@ -6,7 +6,7 @@ keys = [
   "/ldap/base",
   "/ldap/binddn",
   "/ldap/bindpw",
-  "/ldap/filtermemberof",
+  "/ldap/filter",
   "/ldap/ssl/enable",
   "/ldap/ssl/cacertfile",
 ]

@@ -7,4 +7,3 @@ auth required pam_ldap.so
 account required pam_ldap.so
 session required pam_ldap.so
 password required pam_ldap.so
-#session required        pam_mkhomedir.so        skel=/etc/skel umask=0022

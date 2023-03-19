@@ -2,7 +2,6 @@
 src = "vsftpd.conf.tmpl"
 dest = "/etc/vsftpd.conf"
 keys = [
-  "/vsftpd/pasv/address",
   "/vsftpd/pasv/min/port",
   "/vsftpd/pasv/max/port",
   "/vsftpd/pasv/enable",

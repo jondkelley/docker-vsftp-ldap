@@ -1,14 +1,51 @@
+# Run in the foreground to keep the container running:
 listen=YES
+
+# Allow anonymous FTP? (Beware - allowed by default if you comment this out).
+anonymous_enable=NO
+
+# Uncomment this to allow local users to log in.
+local_enable=YES
+
+## Enable virtual users
+guest_enable=YES
+
+## Virtual users will use the same permissions as anonymous
+virtual_use_local_privs=YES
+
+# Uncomment this to enable any form of FTP write command.
 write_enable=YES
-use_localtime=YES
-xferlog_enable=YES
-#connect_from_port_20=YES
-nopriv_user=svc_ftp
-guest_username=svc_ftp
-chown_uploads=YES
-chown_username=svc_ftp
-secure_chroot_dir=/var/run/vsftpd/empty
+
+## PAM file name
 pam_service_name=vsftpd
+
+## Home Directory for virtual users
+user_sub_token=$USER
+local_root=/home/vsftpd/$USER
+
+# You may specify an explicit list of local users to chroot() to their home
+# directory. If chroot_local_user is YES, then this list becomes a list of
+# users to NOT chroot().
+chroot_local_user=YES
+
+# Workaround chroot check.
+# See https://www.benscobie.com/fixing-500-oops-vsftpd-refusing-to-run-with-writable-root-inside-chroot/
+# and http://serverfault.com/questions/362619/why-is-the-chroot-local-user-of-vsftpd-insecure
+allow_writeable_chroot=YES
+
+## Hide ids from user
+hide_ids=YES
+
+## Enable logging
+xferlog_enable=YES
+xferlog_file=/var/log/vsftpd.log
+log_ftp_protocol=YES
+
+## Enable active mode
+port_enable=YES
+connect_from_port_20=YES
+ftp_data_port=20
+
 rsa_private_key_file={{getv "/vsftpd/ssl/privatekey"}}
 rsa_cert_file={{getv "/vsftpd/ssl/publickey"}}
 ssl_enable={{getv "/vsftpd/ssl/enable"}}
@@ -17,21 +54,14 @@ ssl_sslv2={{getv "/vsftpd/ssl/sslv2"}}
 ssl_sslv3={{getv "/vsftpd/ssl/sslv3"}}
 ssl_ciphers={{getv "/vsftpd/ssl/ciphers"}}
 debug_ssl=NO
-force_dot_files=NO
-hide_ids=NO
-virtual_use_local_privs=YES
-anonymous_enable=NO
-local_enable=YES
-guest_enable=YES
-#local_root=/home/vftp/$USER
-local_root=/home/vftp
-allow_writeable_chroot=YES
-chroot_local_user=YES
-log_ftp_protocol=YES
-dual_log_enable=YES
-delay_failed_login=3
+
+## Disable seccomp filter sanboxing
+seccomp_sandbox=NO
+
+#delay_failed_login=3
 pasv_enable={{getv "/vsftpd/pasv/enable"}}
 pasv_min_port={{getv "/vsftpd/pasv/min/port"}}
 pasv_max_port={{getv "/vsftpd/pasv/max/port"}}
-pasv_address={{getv "/vsftpd/pasv/address"}}
 session_support=YES
+
+### Variables set at container runtime
